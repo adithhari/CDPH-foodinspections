@@ -300,4 +300,4 @@ For issues, questions, or suggestions:
 
 **Repository**: https://github.com/adithhari/CDPH-foodinspections
 
-**Live Demo**: (Coming soon)
+**Authors*: Adith <adithharinarayanan@github.com>, Srushti <srushti-s@github.com>, Humaid <humaidilyas@github.com>
