@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chicago Food Safety Inspections - Example</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #0a1929;
+            color: #fff;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        header {
+            padding: 20px 0;
+            border-bottom: 1px solid #1e3a5f;
+            margin-bottom: 30px;
+        }
+        
+        h1 {
+            font-size: 1.5em;
+            font-weight: 400;
+        }
+        
+        .controls {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        input[type="text"], select {
+            background: #132f4c;
+            border: 1px solid #1e3a5f;
+            color: #fff;
+            padding: 10px 15px;
+            border-radius: 4px;
+            font-size: 14px;
+            min-width: 250px;
+        }
+        
+        input[type="text"]:focus, select:focus {
+            outline: none;
+            border-color: #66b2ff;
+        }
+        
+        button {
+            background: #0072e5;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        button:hover {
+            background: #0059b2;
+        }
+        
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .table-container {
+            background: #0a1929;
+            border: 1px solid #1e3a5f;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        thead {
+            background: #132f4c;
+        }
+        
+        th {
+            text-align: left;
+            padding: 15px;
+            font-weight: 500;
+            font-size: 14px;
+            color: #b0bec5;
+            border-bottom: 1px solid #1e3a5f;
+        }
+        
+        tbody tr {
+            border-bottom: 1px solid #1e3a5f;
+            transition: background 0.2s;
+        }
+        
+        tbody tr:hover {
+            background: #132f4c;
+        }
+        
+        td {
+            padding: 15px;
+            font-size: 14px;
+        }
+        
+        .no-data {
+            text-align: center;
+            padding: 40px;
+            color: #b0bec5;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #b0bec5;
+        }
+        
+        .loading::after {
+            content: '...';
+            animation: dots 1.5s steps(3, end) infinite;
+        }
+        
+        @keyframes dots {
+            0%, 20% { content: '.'; }
+            40% { content: '..'; }
+            60%, 100% { content: '...'; }
+        }
+        
+        .pagination {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border-top: 1px solid #1e3a5f;
+            background: #0a1929;
+        }
+        
+        .pagination-info {
+            color: #b0bec5;
+            font-size: 14px;
+        }
+        
+        .pagination-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .pagination-controls select {
+            min-width: 80px;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .badge-pass {
+            background: #1e4620;
+            color: #4caf50;
+        }
+        
+        .badge-fail {
+            background: #5f2120;
+            color: #f44336;
+        }
+        
+        .badge-conditions {
+            background: #5f4c1e;
+            color: #ff9800;
+        }
+        
+        .badge-high-risk {
+            background: #5f2120;
+            color: #f44336;
+        }
+        
+        .badge-medium-risk {
+            background: #5f4c1e;
+            color: #ff9800;
+        }
+        
+        .badge-low-risk {
+            background: #1e4620;
+            color: #4caf50;
+        }
+        
+        .stats {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: #132f4c;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #1e3a5f;
+            flex: 1;
+        }
+        
+        .stat-label {
+            color: #b0bec5;
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🍔 Chicago Food Safety Inspections</h1>
+        </header>
+        
+        <div class="stats" id="stats">
+            <div class="stat-card">
+                <div class="stat-label">Total Facilities</div>
+                <div class="stat-value" id="totalFacilities">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Loaded Records</div>
+                <div class="stat-value" id="loadedRecords">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Current Page</div>
+                <div class="stat-value" id="currentPage">1</div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <input 
+                type="text" 
+                id="searchInput" 
+                placeholder="Search name/address..."
+            />
+            
+            <select id="riskFilter">
+                <option value="">All Risk Levels</option>
+                <option value="Risk 1 (High)">Risk 1 (High)</option>
+                <option value="Risk 2 (Medium)">Risk 2 (Medium)</option>
+                <option value="Risk 3 (Low)">Risk 3 (Low)</option>
+            </select>
+            
+            <select id="resultFilter">
+                <option value="">All Results</option>
+                <option value="Pass">Pass</option>
+                <option value="Fail">Fail</option>
+                <option value="Pass w/ Conditions">Pass w/ Conditions</option>
+            </select>
+            
+            <button onclick="loadData()">🔍 Search</button>
+            <button onclick="resetFilters()">🔄 Reset</button>
+        </div>
+        
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>License #</th>
+                        <th>DBA</th>
+                        <th>Type</th>
+                        <th>Address</th>
+                        <th>Risk</th>
+                        <th>Latest Result</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <tr>
+                        <td colspan="6" class="loading">Loading data</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <div class="pagination">
+                <div class="pagination-info" id="paginationInfo">
+                    Showing 0-0 of 0 rows
+                </div>
+                <div class="pagination-controls">
+                    <label>Rows per page:</label>
+                    <select id="pageSizeSelect" onchange="changePageSize()">
+                        <option value="10">10</option>
+                        <option value="25" selected>25</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                    <button onclick="previousPage()" id="prevBtn">◀ Previous</button>
+                    <button onclick="nextPage()" id="nextBtn">Next ▶</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // ===========================
+        // CONFIGURATION
+        // ===========================
+        const API_BASE_URL = 'http://localhost:3000';
+        
+        let currentPage = 1;
+        let pageSize = 25;
+        let totalRecords = 0;
+        
+        // ===========================
+        // MAIN DATA LOADING FUNCTION
+        // ===========================
+        async function loadData() {
+            const searchQuery = document.getElementById('searchInput').value;
+            const risk = document.getElementById('riskFilter').value;
+            const results = document.getElementById('resultFilter').value;
+            
+            const params = new URLSearchParams({
+                limit: pageSize,
+                offset: (currentPage - 1) * pageSize
+            });
+            
+            if (searchQuery) params.append('search', searchQuery);
+            if (risk) params.append('risk', risk);
+            if (results) params.append('results', results);
+            
+            const url = `${API_BASE_URL}/api/facilities/with-latest-inspection?${params}`;
+            
+            try {
+                showLoading();
+                
+                const response = await fetch(url);
+                const result = await response.json();
+                
+                if (result.success) {
+                    renderTable(result.data);
+                    updatePagination(result.count);
+                    updateStats(result.count);
+                } else {
+                    showError('Failed to load data: ' + result.error);
+                }
+            } catch (error) {
+                console.error('Error loading data:', error);
+                showError('Network error. Make sure the API server is running.');
+            }
+        }
+        
+        // ===========================
+        // TABLE RENDERING
+        // ===========================
+        function renderTable(data) {
+            const tbody = document.getElementById('tableBody');
+            
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="no-data">No rows</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = data.map(facility => `
+                <tr>
+                    <td>${facility.license_number || '-'}</td>
+                    <td>${facility.dba_name || '-'}</td>
+                    <td>${facility.type || '-'}</td>
+                    <td>${formatAddress(facility)}</td>
+                    <td>${formatRisk(facility.risk)}</td>
+                    <td>${formatResult(facility.latest_result)}</td>
+                </tr>
+            `).join('');
+        }
+        
+        function showLoading() {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '<tr><td colspan="6" class="loading">Loading data</td></tr>';
+        }
+        
+        function showError(message) {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = `<tr><td colspan="6" class="no-data">❌ ${message}</td></tr>`;
+        }
+        
+        // ===========================
+        // FORMATTING FUNCTIONS
+        // ===========================
+        function formatAddress(facility) {
+            const parts = [];
+            if (facility.address) parts.push(facility.address);
+            if (facility.city) parts.push(facility.city);
+            return parts.join(', ') || '-';
+        }
+        
+        function formatRisk(risk) {
+            if (!risk || risk === 'Risk Not Mentioned') return '-';
+            
+            let badgeClass = 'badge';
+            if (risk.includes('High')) badgeClass += ' badge-high-risk';
+            else if (risk.includes('Medium')) badgeClass += ' badge-medium-risk';
+            else if (risk.includes('Low')) badgeClass += ' badge-low-risk';
+            
+            return `<span class="${badgeClass}">${risk}</span>`;
+        }
+        
+        function formatResult(result) {
+            if (!result || result === 'Results not Published') return '-';
+            
+            let badgeClass = 'badge';
+            if (result === 'Pass') badgeClass += ' badge-pass';
+            else if (result === 'Fail') badgeClass += ' badge-fail';
+            else if (result.includes('Conditions')) badgeClass += ' badge-conditions';
+            
+            return `<span class="${badgeClass}">${result}</span>`;
+        }
+        
+        // ===========================
+        // PAGINATION
+        // ===========================
+        function updatePagination(count) {
+            totalRecords = count;
+            const start = (currentPage - 1) * pageSize + 1;
+            const end = Math.min(currentPage * pageSize, totalRecords);
+            
+            document.getElementById('paginationInfo').textContent = 
+                `Showing ${start}-${end} of ${totalRecords} rows`;
+            
+            document.getElementById('prevBtn').disabled = currentPage === 1;
+            document.getElementById('nextBtn').disabled = count < pageSize;
+        }
+        
+        function nextPage() {
+            currentPage++;
+            document.getElementById('currentPage').textContent = currentPage;
+            loadData();
+        }
+        
+        function previousPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                document.getElementById('currentPage').textContent = currentPage;
+                loadData();
+            }
+        }
+        
+        function changePageSize() {
+            pageSize = parseInt(document.getElementById('pageSizeSelect').value);
+            currentPage = 1;
+            document.getElementById('currentPage').textContent = currentPage;
+            loadData();
+        }
+        
+        // ===========================
+        // FILTERS
+        // ===========================
+        function resetFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('riskFilter').value = '';
+            document.getElementById('resultFilter').value = '';
+            currentPage = 1;
+            document.getElementById('currentPage').textContent = currentPage;
+            loadData();
+        }
+        
+        // Search on Enter key
+        document.getElementById('searchInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                currentPage = 1;
+                document.getElementById('currentPage').textContent = currentPage;
+                loadData();
+            }
+        });
+        
+        // ===========================
+        // STATISTICS
+        // ===========================
+        function updateStats(loadedCount) {
+            document.getElementById('loadedRecords').textContent = loadedCount;
+        }
+        
+        async function loadTotalStats() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/analytics/stats`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    document.getElementById('totalFacilities').textContent = 
+                        result.data.total_facilities.toLocaleString();
+                }
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+        
+        // ===========================
+        // INITIALIZATION
+        // ===========================
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('🚀 Initializing application...');
+            console.log('📡 API Base URL:', API_BASE_URL);
+            console.log('💡 Make sure your API server is running on port 3000');
+            
+            loadData();
+            loadTotalStats();
+        });
+    </script>
+</body>
+</html>
